@@ -6,10 +6,13 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Csv
 import Data.Vector (Vector)
 import qualified Data.Vector as V
+import qualified Data.Vector.Unboxed as VU
 import System.Directory (doesFileExist)
 import DecisionTreeRegressor
 import RandomForestRegressor
 import System.Random
+import qualified VectorDecisionTreeRegressor as VDTR
+import qualified VectorRandomForestRegressor as VRFR
 
 data HousingPrice = HousingPrice
   { index :: Int,
@@ -70,6 +73,27 @@ calculateTrees = do
       zipped = V.toList $ V.zip solutionEstimates solutionTargets
   mapM_ (\toWrite -> appendFile "results" (show toWrite ++ "\n")) zipped
 
+runModel :: IO ()
+runModel = do
+  trees <- createVectorRFR "housing.csv"
+  mapM_ print trees
+
+createVectorRFR :: FilePath -> IO [VDTR.Tree]
+createVectorRFR fp = do
+  csv <- parseCsv fp
+  case csv of
+    Left err -> do
+      putStrLn err
+      return []
+    Right csvData -> do
+      gen <- getStdGen
+      pure $ createVectorRandomForestFromCSV csvData gen
+ 
+createVectorRandomForestFromCSV :: CsvData -> StdGen -> [VDTR.Tree]
+createVectorRandomForestFromCSV csvData gen =
+  let (solutionsVector, indexVector, targetVector) = convertCsvDataToVectors csvData
+  in VRFR.createRandomForest solutionsVector indexVector targetVector (VRFR.AmountOfTrees 8) (VDTR.AmountOfSolutions (VU.length (VDTR.unVectorIndexes indexVector)))  (VDTR.MaximumLeafSize 20)  (VDTR.AmountOfFeatures 8) (VDTR.NumOfFeatures 3) (VDTR.MaxDepth 10) gen
+
 createRandomForestFromCSV :: CsvData -> StdGen -> [Tree] 
 createRandomForestFromCSV csvData gen =
   let solutions = convertCsvDataToSolutions csvData
@@ -88,3 +112,19 @@ convertHousingPriceToSolution hp =
     aveOccup hp,
     latitude hp,
     longitude hp]) (medHouseVal hp)
+
+convertCsvDataToVectors :: CsvData -> (VDTR.VectorSolutions, VDTR.VectorIndexes, VDTR.VectorTargets)
+convertCsvDataToVectors (_, housingPrices) = 
+  let targetVector = VDTR.VectorTargets $ VU.fromList $ map (\hp -> medHouseVal hp) $ V.toList housingPrices
+      indexVector = VDTR.VectorIndexes $ VU.generate (VU.length (VDTR.unVectorTargets targetVector)) id 
+      solutionsVector = VDTR.VectorSolutions $ VU.concat [
+                        VU.fromList $ map medInc $ V.toList housingPrices, 
+                        VU.fromList $ map houseAge $ V.toList housingPrices, 
+                        VU.fromList $ map aveRooms $ V.toList housingPrices, 
+                        VU.fromList $ map aveBedrms $ V.toList housingPrices, 
+                        VU.fromList $ map population $ V.toList housingPrices, 
+                        VU.fromList $ map aveOccup $ V.toList housingPrices, 
+                        VU.fromList $ map latitude $ V.toList housingPrices, 
+                        VU.fromList $ map longitude $ V.toList housingPrices] 
+
+  in (solutionsVector, indexVector, targetVector)

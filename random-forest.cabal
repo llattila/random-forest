@@ -59,7 +59,7 @@ executable housingexample
     build-depends:
         base >=4.11,
         random-forest 
-    ghc-options: -threaded -eventlog -rtsopts
+    ghc-options: -threaded -rtsopts -fllvm
 
 library
     -- Import common warning flags.
@@ -69,6 +69,8 @@ library
     exposed-modules:  DecisionTreeRegressor 
                       RandomForestRegressor
                       HousingExample
+                      VectorDecisionTreeRegressor
+                      VectorRandomForestRegressor
 
     -- Modules included in this library but not exported.
     -- other-modules:
