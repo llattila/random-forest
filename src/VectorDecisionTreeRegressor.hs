@@ -143,11 +143,20 @@ partitionTree vt vs vi aos pv pix =
 
 partitionSolutions :: VectorSolutions -> VectorIndexes -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> (VectorIndexes, VectorIndexes)
 partitionSolutions vs vi aos pv pix = 
-  let (leftValues, rightValues) = partitionEithers $ map (\ix -> partitionSolutionsHelper vs ix aos pv pix) $ V.toList (unVectorIndexes vi)
-  in (VectorIndexes (V.fromList leftValues), VectorIndexes (V.fromList rightValues) )
+  let boolVector = V.map (\ix -> partitionSolutionsHelper vs ix aos pv pix) $ unVectorIndexes vi
+  in divideBooleanVector boolVector vi 
 
-partitionSolutionsHelper :: VectorSolutions -> Int -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> Either Int Int
+partitionSolutionsHelper :: VectorSolutions -> Int -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> Bool 
 partitionSolutionsHelper (VectorSolutions vs) ix (AmountOfSolutions aos) (PartitionValue pv) (PartitionIndex pix) =
-  if vs ! (aos * pix + ix) < pv
-    then Left ix
-    else Right ix 
+  vs ! (aos * pix + ix) < pv
+
+divideBooleanVector :: Vector Bool -> VectorIndexes -> (VectorIndexes, VectorIndexes)
+divideBooleanVector isRightVector vi = divideBooleanVectorHelper (V.length isRightVector - 1) isRightVector vi ([],[]) 
+
+divideBooleanVectorHelper :: Int -> Vector Bool -> VectorIndexes -> ([Int], [Int]) -> (VectorIndexes, VectorIndexes)
+divideBooleanVectorHelper 0 _ _ (left, right) = (VectorIndexes (V.fromList left), VectorIndexes (V.fromList right))
+divideBooleanVectorHelper n vecBool (VectorIndexes vi) (left, right) =
+  if vecBool ! n
+    then divideBooleanVectorHelper (n-1) vecBool (VectorIndexes vi) (left, vi ! n : right)
+    else divideBooleanVectorHelper (n-1) vecBool (VectorIndexes vi) (vi ! n : left, right)
+
