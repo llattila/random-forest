@@ -143,8 +143,8 @@ partitionTree vt vs vi aos pv pix =
 
 partitionSolutions :: VectorSolutions -> VectorIndexes -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> (VectorIndexes, VectorIndexes)
 partitionSolutions vs vi aos pv pix = 
-  let boolVector = V.map (\ix -> partitionSolutionsHelper vs ix aos pv pix) $ unVectorIndexes vi
-  in divideBooleanVector boolVector vi 
+  let (rightVector, leftVector) = V.unstablePartition (\ix -> partitionSolutionsHelper vs ix aos pv pix) $ unVectorIndexes vi
+  in (VectorIndexes leftVector, VectorIndexes rightVector) 
 
 partitionSolutionsHelper :: VectorSolutions -> Int -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> Bool 
 partitionSolutionsHelper (VectorSolutions vs) ix (AmountOfSolutions aos) (PartitionValue pv) (PartitionIndex pix) =
