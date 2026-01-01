@@ -1,4 +1,3 @@
-
 {-# LANGUAGE DeriveGeneric #-}
 
 module VectorDecisionTreeRegressor where
@@ -85,7 +84,6 @@ createBestSplit gen nof aof aos mls vs vi vt =
   in if V.length (unVectorIndexes vi) < unMaximumLeafSize mls
        then (nextGen,  Leaf vi (calculateRegression vt vi))
        else (nextGen, partitionTree vt vs vi aos smallestVal smallestIx )
-       
       
 findSmallestResidual :: [(PartitionIndex, PartitionValue, Double)] -> (PartitionIndex, PartitionValue)
 findSmallestResidual (x:xs) = findSmallestResidualHelper xs x 
@@ -96,7 +94,6 @@ findSmallestResidualHelper ((pix, pval, res) : xs) (bix, bpval, bres) =
   if res < bres
     then findSmallestResidualHelper xs (pix, pval, res)
     else findSmallestResidualHelper xs (bix, bpval, bres)
-
 
 calculateResidualsForSomeSplits :: StdGen -> NumOfFeatures -> AmountOfFeatures -> AmountOfSolutions -> VectorSolutions -> VectorIndexes -> VectorTargets ->  (StdGen, [(PartitionIndex, PartitionValue,  Double)])
 calculateResidualsForSomeSplits gen nof aof aos vs vi vt = 
@@ -150,13 +147,5 @@ partitionSolutionsHelper :: VectorSolutions -> Int -> AmountOfSolutions -> Parti
 partitionSolutionsHelper (VectorSolutions vs) ix (AmountOfSolutions aos) (PartitionValue pv) (PartitionIndex pix) =
   vs ! (aos * pix + ix) < pv
 
-divideBooleanVector :: Vector Bool -> VectorIndexes -> (VectorIndexes, VectorIndexes)
-divideBooleanVector isRightVector vi = divideBooleanVectorHelper (V.length isRightVector - 1) isRightVector vi ([],[]) 
-
-divideBooleanVectorHelper :: Int -> Vector Bool -> VectorIndexes ->  ([Int], [Int]) -> (VectorIndexes, VectorIndexes)
-divideBooleanVectorHelper 0 _ _ (left, right) = (VectorIndexes (V.fromList left), VectorIndexes (V.fromList right))
-divideBooleanVectorHelper n vecBool (VectorIndexes vi) (left, right) =
-  if vecBool ! n
-    then divideBooleanVectorHelper (n-1) vecBool (VectorIndexes vi) (left, vi ! n : right)
-    else divideBooleanVectorHelper (n-1) vecBool (VectorIndexes vi) (vi ! n : left, right)
+{-# INLINE partitionSolutionsHelper #-}
 
