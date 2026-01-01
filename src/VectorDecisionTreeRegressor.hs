@@ -153,7 +153,7 @@ partitionSolutionsHelper (VectorSolutions vs) ix (AmountOfSolutions aos) (Partit
 divideBooleanVector :: Vector Bool -> VectorIndexes -> (VectorIndexes, VectorIndexes)
 divideBooleanVector isRightVector vi = divideBooleanVectorHelper (V.length isRightVector - 1) isRightVector vi ([],[]) 
 
-divideBooleanVectorHelper :: Int -> Vector Bool -> VectorIndexes -> ([Int], [Int]) -> (VectorIndexes, VectorIndexes)
+divideBooleanVectorHelper :: Int -> Vector Bool -> VectorIndexes ->  ([Int], [Int]) -> (VectorIndexes, VectorIndexes)
 divideBooleanVectorHelper 0 _ _ (left, right) = (VectorIndexes (V.fromList left), VectorIndexes (V.fromList right))
 divideBooleanVectorHelper n vecBool (VectorIndexes vi) (left, right) =
   if vecBool ! n
