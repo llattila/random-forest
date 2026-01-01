@@ -75,7 +75,9 @@ calculateRegression :: VectorTargets -> VectorIndexes -> Double
 calculateRegression (VectorTargets vt) (VectorIndexes vi) =
   if V.length vi == 0
     then 0.0
-    else (V.sum $ V.map (\ix -> vt ! ix) vi) / fromIntegral (V.length vi)
+    else (V.foldl' (\sum ix -> sum + vt ! ix) 0.0 vi) / fromIntegral (V.length vi)
+
+{-# INLINE calculateRegression #-}
 
 createBestSplit :: StdGen -> NumOfFeatures -> AmountOfFeatures -> AmountOfSolutions -> MaximumLeafSize -> VectorSolutions -> VectorIndexes -> VectorTargets -> (StdGen, Tree)
 createBestSplit gen nof aof aos mls vs vi vt = 
@@ -131,7 +133,9 @@ getResidualForSplit vs vi vt aos pix pv =
 
 calculateResiduals :: VectorTargets -> Tree -> Double
 calculateResiduals vt (Node left _ _ right) = calculateResiduals vt left + calculateResiduals vt right
-calculateResiduals (VectorTargets vt) (Leaf indexes average) = V.sum $ V.map (\ix -> (vt ! ix - average) ^ (2 :: Int)) (unVectorIndexes indexes )
+calculateResiduals (VectorTargets vt) (Leaf indexes average) = V.foldl' (\sum ix -> sum + (vt ! ix - average) ^ (2 :: Int)) 0.0 (unVectorIndexes indexes )
+--V.sum $ V.map (\ix -> (vt ! ix - average) ^ (2 :: Int)) (unVectorIndexes indexes )
+{-# INLINE calculateResiduals #-}
 
 partitionTree :: VectorTargets -> VectorSolutions -> VectorIndexes -> AmountOfSolutions -> PartitionValue -> PartitionIndex -> Tree
 partitionTree vt vs vi aos pv pix =
